@@ -1,38 +1,38 @@
-# Addition PWA
+# Addition Game
 
-A Progressive Web Application (PWA) for mathematical calculations, built with Python backend and standard web technologies for the frontend.
+An educational addition game featuring intelligent problem selection, adaptive learning, theme system, and DEV-GUIDELINES compliant development. Built with Python backend and standard web technologies for the frontend.
 
 ## 🏗️ Project Structure
 
 ```text
 Addition/
-├── frontend/                 # Frontend PWA files
-│   ├── index.html           # Main HTML file
+├── frontend/                 # Frontend application files
+│   ├── index-dev.html       # Development HTML file
+│   ├── index.html           # Production HTML file
+│   ├── dev-server.py        # Development server
 │   ├── manifest.json        # PWA manifest
-│   ├── sw.js               # Service worker for offline functionality
+│   ├── sw.js.disabled      # Service worker (disabled)
 │   ├── css/
-│   │   └── main.css        # Main stylesheet
+│   │   └── main.css        # Main stylesheet with theme system
 │   ├── js/
-│   │   ├── main.js         # Main application logic
-│   │   └── api.js          # API communication
-│   ├── images/             # App images
-│   └── icons/              # PWA icons (various sizes needed)
-├── backend/                 # Python backend
+│   │   ├── main.js         # Main game logic with intelligent selection
+│   │   ├── api.js          # API communication
+│   │   ├── init.js         # Initialization logic
+│   │   ├── storage.js      # Storage management
+│   │   └── simple-storage.js # Simplified storage
+│   └── test-hint.html      # Hint testing page
+├── backend/                 # Python backend (minimal)
 │   ├── app.py              # Main Flask application
-│   ├── api/
-│   │   └── routes.py       # API endpoints
-│   ├── models/
-│   │   ├── calculator.py   # Calculator logic
-│   │   └── history.py      # Calculation history management
-│   ├── utils/
-│   │   └── validators.py   # Input validation utilities
 │   ├── config/
 │   │   └── settings.py     # Application configuration
-│   └── data/               # Data storage directory
-├── static/                  # Static files served by Python
-├── requirements.txt         # Python dependencies
-├── .gitignore              # Git ignore rules
-└── README.md               # This file
+│   └── api/, models/, utils/ # Backend structure (minimal)
+├── _resources/             # Development resources
+├── static/                 # Static files
+├── DEV-GUIDELINES.md       # Development guidelines
+├── QUICK-REF.md           # Quick reference
+├── requirements.txt        # Python dependencies
+├── .gitignore             # Git ignore rules
+└── README.md              # This file
 ```
 
 ## 🚀 Quick Start
@@ -63,25 +63,29 @@ Addition/
    pip install -r requirements.txt
    ```
 
-4. **Run the application:**
+4. **Run the development server:**
 
    ```bash
-   cd backend
-   python app.py
+   cd frontend
+   python dev-server.py
    ```
 
 5. **Open your browser and navigate to:**
 
    ```text
-   http://localhost:5000
+   http://localhost:8080
    ```
 
-## 📱 PWA Features
+## ✨ Features
 
-- **Offline Functionality**: Works without internet connection
-- **Installable**: Can be installed on mobile devices and desktop
-- **Responsive Design**: Adapts to different screen sizes
-- **App-like Experience**: Feels like a native application
+- **Intelligent Problem Selection**: Error-aware balanced combination selection using tries-errors success scoring
+- **Adaptive Learning**: Bidirectional error tracking that adapts to user performance
+- **Theme System**: Light, dark, and auto (system) theme switching
+- **Auto-Test Mode**: Rapid iteration testing with 10% error rate for algorithm validation
+- **Level-Based Learning**: Multiple difficulty levels with different learning objectives
+- **DEV-GUIDELINES Compliant**: Follows strict development guidelines for maintainable code
+- **Layout Stability**: Fixed-height containers preventing screen jumping
+- **Integrated Settings**: Welcome screen settings with auto-save functionality
 
 ## 🔧 Development
 
