@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      http-equiv="Cache-Control"
+      content="no-cache, no-store, must-revalidate"
+    />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <title>🎮 Addition Game - TRULY Simple</title>
+
+    <!-- Load external CSS -->
+    <link rel="stylesheet" href="css/main.css?v=20251014-014" />
+  </head>
+  <body>
+    <div id="app">
+      <header>
+        <h1>🎮 Addition Game! (TRULY Simple)</h1>
+      </header>
+
+      <main>
+        <!-- Welcome/Level Selection Screen -->
+        <div id="welcome-screen" class="screen">
+          <div class="level-selection">
+            <h2>🎮 Choose Your Level!</h2>
+            <div class="level-grid">
+              <div class="level-card" data-level="0">
+                <div class="level-icon">🔤</div>
+                <div class="level-name">Level 0</div>
+                <div class="level-title">Number Recognition</div>
+                <div class="level-desc">Touch the number you hear! 🔢</div>
+                <button class="level-btn" type="button">Start Playing!</button>
+              </div>
+              <div class="level-card" data-level="1">
+                <div class="level-icon">➕</div>
+                <div class="level-name">Level 1</div>
+                <div class="level-title">Single Digit Addition</div>
+                <div class="level-desc">Add two numbers (0-9) 🧮</div>
+                <button class="level-btn" type="button">Start Playing!</button>
+              </div>
+            </div>
+            <div class="welcome-settings">
+              <h3>⚙️ Settings</h3>
+              <div class="settings-grid">
+                <div class="setting-item">
+                  <label for="quiet-mode">🔇 Quiet Mode:</label>
+                  <input type="checkbox" id="quiet-mode" />
+                </div>
+                <div class="setting-item">
+                  <label for="difficulty-level">📊 Difficulty:</label>
+                  <select id="difficulty-level">
+                    <option value="easy">Easy</option>
+                    <option value="medium">Medium</option>
+                    <option value="hard">Hard</option>
+                  </select>
+                </div>
+                <div class="setting-item">
+                  <label for="theme-select">🎨 Theme:</label>
+                  <select id="theme-select">
+                    <option value="auto">🌓 Auto (System)</option>
+                    <option value="light">☀️ Light</option>
+                    <option value="dark">🌙 Dark</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Settings Screen - REMOVED - Now integrated into welcome screen -->
+
+        <!-- Level 0 Game Screen -->
+        <div id="level0-screen" class="screen hidden">
+          <div class="level0-container">
+            <div class="game-header">
+              <div class="level-info">
+                <div class="current-level">
+                  <span class="level-icon">🔤</span>
+                  <span>Level 0: Number Recognition</span>
+                </div>
+                <button
+                  id="level0-back-btn"
+                  class="game-btn secondary small"
+                  type="button"
+                >
+                  🔙 Back
+                </button>
+              </div>
+              <div class="stats-row">
+                <div class="stat-item">
+                  <div class="stat-icon">✅</div>
+                  <div class="stat-label">Correct</div>
+                  <div class="stat-value" id="level0-correct">0</div>
+                </div>
+                <div class="stat-item">
+                  <div class="stat-icon">❌</div>
+                  <div class="stat-label">Wrong</div>
+                  <div class="stat-value" id="level0-wrong">0</div>
+                </div>
+                <div class="stat-item">
+                  <div class="stat-icon">🎯</div>
+                  <div class="stat-label">Accuracy</div>
+                  <div class="stat-value" id="level0-accuracy">100%</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="instruction-area">
+              <div class="instruction-text" id="level0-instruction">
+                Click "Play Number" to hear a number, then touch it!
+              </div>
+            </div>
+
+            <div class="game-controls">
+              <button
+                id="level0-play-btn"
+                class="game-btn primary large"
+                type="button"
+              >
+                🔊 Play Number
+              </button>
+              <button id="level0-hint-btn" class="game-btn hint" type="button">
+                💡 Hint
+              </button>
+            </div>
+
+            <!-- Scoring Arrays Display -->
+            <div class="scoring-display">
+              <div class="scoring-array hits-array">
+                <div class="array-title">Tries Array</div>
+                <div class="array-content" id="level0-hits-display">[]</div>
+              </div>
+              <div class="scoring-array errors-array">
+                <div class="array-title">Errors Array</div>
+                <div class="array-content" id="level0-errors-display">[]</div>
+              </div>
+            </div>
+
+            <div class="number-grid" id="level0-number-grid">
+              <div class="number-tile" data-number="0">
+                <div class="number-display">0</div>
+              </div>
+              <div class="number-tile" data-number="1">
+                <div class="number-display">1</div>
+              </div>
+              <div class="number-tile" data-number="2">
+                <div class="number-display">2</div>
+              </div>
+              <div class="number-tile" data-number="3">
+                <div class="number-display">3</div>
+              </div>
+              <div class="number-tile" data-number="4">
+                <div class="number-display">4</div>
+              </div>
+              <div class="number-tile" data-number="5">
+                <div class="number-display">5</div>
+              </div>
+              <div class="number-tile" data-number="6">
+                <div class="number-display">6</div>
+              </div>
+              <div class="number-tile" data-number="7">
+                <div class="number-display">7</div>
+              </div>
+              <div class="number-tile" data-number="8">
+                <div class="number-display">8</div>
+              </div>
+              <div class="number-tile" data-number="9">
+                <div class="number-display">9</div>
+              </div>
+            </div>
+
+            <div class="feedback-area" id="level0-feedback-area"></div>
+          </div>
+        </div>
+
+        <!-- Level 1 Game Screen -->
+        <div id="level1-screen" class="screen hidden">
+          <div class="level1-container">
+            <div class="game-header">
+              <div class="level-info">
+                <div class="current-level">
+                  <span class="level-icon">➕</span>
+                  <span>Level 1: Addition</span>
+                </div>
+                <button
+                  id="level1-back-btn"
+                  class="game-btn secondary small"
+                  type="button"
+                >
+                  🔙 Back
+                </button>
+              </div>
+              <div class="stats-row">
+                <div class="stat-item">
+                  <div class="stat-icon">✅</div>
+                  <div class="stat-label">Correct</div>
+                  <div class="stat-value" id="level1-correct">0</div>
+                </div>
+                <div class="stat-item">
+                  <div class="stat-icon">❌</div>
+                  <div class="stat-label">Wrong</div>
+                  <div class="stat-value" id="level1-wrong">0</div>
+                </div>
+                <div class="stat-item">
+                  <div class="stat-icon">🎯</div>
+                  <div class="stat-label">Accuracy</div>
+                  <div class="stat-value" id="level1-accuracy">100%</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="problem-container">
+              <div class="problem-display">
+                <div class="number" id="level1-num1">5</div>
+                <div class="operator">+</div>
+                <div class="number" id="level1-num2">3</div>
+                <div class="equals">=</div>
+                <div class="answer-input-container">
+                  <input
+                    type="number"
+                    id="level1-answer-input"
+                    class="answer-input"
+                    placeholder="?"
+                    min="0"
+                    max="18"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div class="game-controls">
+              <button
+                id="level1-submit-btn"
+                class="game-btn primary"
+                type="button"
+              >
+                ✓ Submit Answer
+              </button>
+              <button id="level1-hint-btn" class="game-btn hint" type="button">
+                💡 Hint
+              </button>
+              <button
+                id="level1-new-problem-btn"
+                class="game-btn secondary"
+                type="button"
+              >
+                🔄 New Problem
+              </button>
+            </div>
+
+            <!-- Scoring Arrays Display -->
+            <div class="scoring-display">
+              <div class="scoring-array hits-array">
+                <div class="array-title">Tries Array</div>
+                <div class="array-content" id="level1-hits-display">[]</div>
+              </div>
+              <div class="scoring-array errors-array">
+                <div class="array-title">Errors Array</div>
+                <div class="array-content" id="level1-errors-display">[]</div>
+              </div>
+            </div>
+
+            <!-- Auto-Test Controls -->
+            <div class="auto-test-controls">
+              <button
+                id="start-auto-test-btn"
+                class="game-btn secondary small"
+                type="button"
+              >
+                🧪 Start Auto-Test (10% errors)
+              </button>
+              <button
+                id="stop-auto-test-btn"
+                class="game-btn secondary small hidden"
+                type="button"
+              >
+                🛑 Stop Auto-Test
+              </button>
+            </div>
+
+            <div class="visual-helper hidden" id="level1-visual-helper"></div>
+            <div class="feedback-area" id="level1-feedback-area"></div>
+          </div>
+        </div>
+      </main>
+
+      <footer>
+        <p>🌟 Keep practicing and have fun! 🌟</p>
+        <p class="footer-subtitle">💡 TRULY Simple - No Cache Wars</p>
+      </footer>
+    </div>
+
+    <!-- Load scripts directly - NO complexity -->
+    <script src="js/simple-storage.js?v=20251014-001"></script>
+    <script src="js/api.js?v=20251014-001"></script>
+    <script src="js/main.js?v=20251014-010"></script>
+    <script src="js/init.js?v=20251014-001"></script>
+  </body>
+</html>

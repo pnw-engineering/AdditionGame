@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hint Toggle Test</title>
+    <style>
+      .visual-helper {
+        height: 5em;
+        margin: 0;
+        overflow: hidden;
+        display: grid;
+        place-items: center;
+        box-sizing: border-box;
+        background-color: #f0f0f0;
+        border: 1px solid #ccc;
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      .visual-helper.hidden {
+        display: none;
+      }
+
+      button {
+        padding: 1em;
+        margin: 1em;
+        font-size: 1.2em;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Hint Toggle Test</h1>
+    <button id="toggle-btn" onclick="toggleHint()">Toggle Hint</button>
+    <div id="status">Status: Unknown</div>
+    <div class="visual-helper hidden" id="test-helper">
+      This is the hint content that should show/hide
+    </div>
+
+    <script>
+      function toggleHint() {
+        const helper = document.getElementById("test-helper");
+        const status = document.getElementById("status");
+
+        if (helper) {
+          console.log("Current classes:", helper.classList.toString());
+          console.log("Is hidden:", helper.classList.contains("hidden"));
+
+          if (helper.classList.contains("hidden")) {
+            helper.classList.remove("hidden");
+            status.textContent = "Status: Showing";
+            console.log("Showing hint");
+          } else {
+            helper.classList.add("hidden");
+            status.textContent = "Status: Hidden";
+            console.log("Hiding hint");
+          }
+
+          console.log("New classes:", helper.classList.toString());
+        } else {
+          console.log("Helper element not found");
+          status.textContent = "Status: Element not found";
+        }
+      }
+
+      // Initialize status
+      window.onload = function () {
+        const helper = document.getElementById("test-helper");
+        const status = document.getElementById("status");
+        if (helper) {
+          status.textContent = helper.classList.contains("hidden")
+            ? "Status: Hidden"
+            : "Status: Showing";
+        }
+      };
+    </script>
+  </body>
+</html>

@@ -1,0 +1,105 @@
+const CACHE_NAME = `addition-pwa-v${Date.now()}`; // Dynamic cache name with timestamp
+const urlsToCache = [
+  "/",
+  "/index.html",
+  "/css/main.css",
+  "/js/main.js",
+  "/js/api.js",
+  "/js/simple-storage.js",
+  "/manifest.json",
+  "/icons/icon-192x192.png",
+  "/icons/icon-512x512.png",
+];
+
+// Install event - skip waiting to activate immediately
+self.addEventListener("install", (event) => {
+  console.log("Service Worker installing with cache:", CACHE_NAME);
+
+  event.waitUntil(
+    caches
+      .open(CACHE_NAME)
+      .then((cache) => {
+        console.log("Opened cache");
+        return cache.addAll(urlsToCache);
+      })
+      .then(() => {
+        // Skip waiting to activate the new service worker immediately
+        return self.skipWaiting();
+      })
+  );
+});
+
+// Activate event - claim clients immediately and clear old caches
+self.addEventListener("activate", (event) => {
+  console.log("Service Worker activating");
+
+  event.waitUntil(
+    caches
+      .keys()
+      .then((cacheNames) => {
+        return Promise.all(
+          cacheNames.map((cacheName) => {
+            if (cacheName !== CACHE_NAME) {
+              console.log("Deleting old cache:", cacheName);
+              return caches.delete(cacheName);
+            }
+          })
+        );
+      })
+      .then(() => {
+        // Take control of all clients immediately
+        return self.clients.claim();
+      })
+  );
+});
+
+// Fetch event - Always fetch fresh content, no caching during development
+self.addEventListener("fetch", (event) => {
+  const url = new URL(event.request.url);
+
+  // For local development, always fetch fresh content
+  if (url.origin === location.origin) {
+    event.respondWith(
+      fetch(event.request.url + "?t=" + Date.now(), {
+        cache: "no-store", // Force fresh fetch, bypass all caches
+        headers: {
+          "Cache-Control": "no-cache, no-store, must-revalidate",
+          Pragma: "no-cache",
+          Expires: "0",
+        },
+      })
+        .then((response) => {
+          console.log("Fetched fresh:", event.request.url);
+          return response;
+        })
+        .catch(() => {
+          // Only use cache as absolute last resort when network fails
+          console.log("Network failed, trying cache for:", event.request.url);
+          return caches.match(event.request).then((response) => {
+            if (response) {
+              return response;
+            }
+            // If not in cache either, return index.html for navigation requests
+            if (event.request.mode === "navigate") {
+              return caches.match("/index.html");
+            }
+            throw new Error("No cached version available and network failed");
+          });
+        })
+    );
+  } else {
+    // For external requests (icons, fonts, etc.), use normal caching
+    event.respondWith(
+      caches.match(event.request).then((response) => {
+        return response || fetch(event.request);
+      })
+    );
+  }
+});
+
+// Listen for messages from the main thread
+self.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
+});
