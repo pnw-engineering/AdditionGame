@@ -13,7 +13,7 @@ body {
   background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%);
   height: 100vh;
   overflow: hidden;
-  font-size: 1rem;
+  font-size: clamp(10px, 1.5vw, 24px);
 }
 
 #app {

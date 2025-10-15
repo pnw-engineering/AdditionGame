@@ -378,6 +378,34 @@ class AdditionGame {
         if (startBtn) startBtn.classList.remove("hidden");
       });
     }
+
+    // Level 0 - Reset Button
+    const level0ResetBtn = document.getElementById("level0-reset-btn");
+    if (level0ResetBtn) {
+      level0ResetBtn.addEventListener("click", () => {
+        this.stats.level0.correct = 0;
+        this.stats.level0.wrong = 0;
+        this.progressMatrix[0].tries = Array(10).fill(0);
+        this.progressMatrix[0].errors = Array(10).fill(0);
+        this.updateLevel0Display();
+        this.updateScoringDisplays(0);
+        this.gameStorage.saveGameStats(this.stats);
+      });
+    }
+
+    // Level 0 - Reset Button
+    const level1ResetBtn = document.getElementById("level1-reset-btn");
+    if (level1ResetBtn) {
+      level1ResetBtn.addEventListener("click", () => {
+        this.stats.level1.correct = 0;
+        this.stats.level1.wrong = 0;
+        this.progressMatrix[0].tries = Array(10).fill(0);
+        this.progressMatrix[0].errors = Array(10).fill(0);
+        this.updateLevel1Display();
+        this.updateScoringDisplays(0);
+        this.gameStorage.saveGameStats(this.stats);
+      });
+    }
   }
 
   startLevel(level) {
