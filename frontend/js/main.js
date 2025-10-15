@@ -234,7 +234,6 @@ class AdditionGame {
         this.hideScoringDisplays();
       }
     }
-
   }
 
   loadSettings() {
@@ -501,12 +500,10 @@ class AdditionGame {
       this.stats.level0.wrong++;
       this.recordTry(0, this.currentProblem.targetNumber, 0);
       this.recordError(0, this.currentProblem.targetNumber, 0);
-      this.showLevel0Feedback(
-        `Try again! That was ${selectedNumber}, but we're looking for ${this.currentProblem.targetNumber}.`,
-        "incorrect"
-      );
+      const errorMsg = `Try again! That was ${selectedNumber}, but we're looking for ${this.currentProblem.targetNumber}.`;
+      this.showLevel0Feedback(errorMsg, "incorrect");
       if (!this.settings.quietMode && !this._level0FeedbackSpoken) {
-        this.speak("Try again!", undefined, 1);
+        this.speak(errorMsg, undefined, 1);
         this._level0FeedbackSpoken = true;
       }
       setTimeout(() => {
@@ -667,7 +664,6 @@ class AdditionGame {
     const tries = triesMatrix[selectedRow][selectedCol];
     const errors = errorsMatrix[selectedRow][selectedCol];
     const successScore = successMatrix[selectedRow][selectedCol];
-
 
     return {
       num1: selectedRow,
@@ -906,7 +902,6 @@ class AdditionGame {
         wrongOptions.length > 0
           ? wrongOptions[Math.floor(Math.random() * wrongOptions.length)]
           : correctAnswer + 1;
-
     } else {
       // Generate correct answer
       answer = this.currentProblem.correctAnswer;
@@ -1028,7 +1023,6 @@ class AdditionGame {
       // Use explicit theme
       html.setAttribute("data-theme", theme);
     }
-
   }
 
   checkOnlineStatus() {
