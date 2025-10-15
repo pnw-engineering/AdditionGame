@@ -1,5 +1,7 @@
 // Addition Game for Elementary Kids - Single Screen Implementation
 class AdditionGame {
+  // Level 0 prompt repeat timer
+  level0PromptTimer = null;
   constructor() {
     this.currentProblem = null;
     this.startTime = null;
@@ -49,7 +51,6 @@ class AdditionGame {
   }
 
   init() {
-    console.log("Addition Game initialized! 🎮");
     this.showScreen("welcome-screen");
     this.setupEventListeners();
     this.loadSettings();
@@ -199,6 +200,14 @@ class AdditionGame {
       if (stopBtn) stopBtn.classList.add("hidden");
     }
 
+    // Stop Level 0 prompt and speech when leaving Level 0
+    if (screenId !== "level0-screen") {
+      this.clearLevel0PromptTimer();
+      if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+    }
+
     // Hide all screens
     const screens = document.querySelectorAll(".screen");
     screens.forEach((screen) => {
@@ -226,7 +235,6 @@ class AdditionGame {
       }
     }
 
-    console.log(`Showing screen: ${screenId}`);
   }
 
   loadSettings() {
@@ -391,32 +399,66 @@ class AdditionGame {
   initLevel0() {
     this.resetLevel0Stats();
     this.updateLevel0Display();
-    const instruction = document.getElementById("level0-instruction");
-    if (instruction) {
-      instruction.textContent =
-        "Click 'Play Number' to hear a number, then touch it!";
-    }
+    this.clearLevel0PromptTimer();
+    this.generateAndPromptLevel0Number();
   }
 
   playLevel0Number() {
+    this.generateAndPromptLevel0Number();
+  }
+
+  // Generate a new number and start the prompt loop
+  generateAndPromptLevel0Number() {
     this.currentProblem = {
       targetNumber: Math.floor(Math.random() * 10),
       startTime: Date.now(),
     };
-
+    this._level0FeedbackSpoken = false;
     this.clearLevel0Feedback();
     this.resetLevel0Tiles();
+    this.level0PromptLoop();
+  }
 
+  // Speak prompt and repeat every 5s until correct tile is touched
+  level0PromptLoop() {
+    // Only run prompt loop if Level 0 screen is active
+    const level0Screen = document.getElementById("level0-screen");
+    if (!level0Screen || level0Screen.classList.contains("hidden")) {
+      this.clearLevel0PromptTimer();
+      if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+      return;
+    }
     const instruction = document.getElementById("level0-instruction");
     if (instruction) {
-      instruction.textContent =
-        "Listen carefully and touch the number you hear!";
+      instruction.textContent = `Can you touch the number ${this.currentProblem.targetNumber}?`;
     }
-
+    this.clearLevel0PromptTimer();
     if (!this.settings.quietMode) {
-      this.speak(this.currentProblem.targetNumber.toString());
-    } else if (instruction) {
-      instruction.textContent = `Find the number: ${this.currentProblem.targetNumber}`;
+      this.speak(
+        `Can you touch the number ${this.currentProblem.targetNumber}?`,
+        () => {
+          if (!level0Screen.classList.contains("hidden")) {
+            this.level0PromptTimer = setTimeout(() => {
+              this.level0PromptLoop();
+            }, 5000);
+          }
+        },
+        1 // Only speak once per cycle for Level 0
+      );
+    } else {
+      this.level0PromptTimer = setTimeout(() => {
+        this.level0PromptLoop();
+      }, 5000);
+    }
+  }
+
+  // Clear the repeat timer
+  clearLevel0PromptTimer() {
+    if (this.level0PromptTimer) {
+      clearTimeout(this.level0PromptTimer);
+      this.level0PromptTimer = null;
     }
   }
 
@@ -429,48 +471,48 @@ class AdditionGame {
     const isCorrect = selectedNumber === this.currentProblem.targetNumber;
     const tile = document.querySelector(`[data-number="${selectedNumber}"]`);
 
+    if (!this._level0FeedbackSpoken) this._level0FeedbackSpoken = false;
     if (isCorrect) {
+      this.clearLevel0PromptTimer();
       if (tile) tile.classList.add("correct");
       this.stats.level0.correct++;
-
-      // Backend Guidelines: Record try (+1 attempt)
       this.recordTry(0, this.currentProblem.targetNumber, 0);
-
-      // Backend Guidelines: Decrement error count for correct answers (minimum 0)
       this.decrementError(0, this.currentProblem.targetNumber, 0);
-
       this.showLevel0Feedback(
         `🎉 Correct! You found ${selectedNumber}!`,
         "correct"
       );
-
+      if (!this.settings.quietMode && !this._level0FeedbackSpoken) {
+        this.speak("Good job!", undefined, 1);
+        this._level0FeedbackSpoken = true;
+      }
       setTimeout(() => {
         this.resetLevel0Tiles();
         this.clearLevel0Feedback();
         const instruction = document.getElementById("level0-instruction");
         if (instruction) {
-          instruction.textContent =
-            "Great job! Click 'Play Number' for another one!";
+          instruction.textContent = "Great job!";
         }
+        // Automatically start next round
+        this.generateAndPromptLevel0Number();
       }, 2000);
     } else {
       if (tile) tile.classList.add("incorrect");
       this.stats.level0.wrong++;
-
-      // Backend Guidelines: Record try (+1 attempt) and error (+1 error count)
       this.recordTry(0, this.currentProblem.targetNumber, 0);
       this.recordError(0, this.currentProblem.targetNumber, 0);
-
       this.showLevel0Feedback(
         `Try again! That was ${selectedNumber}, but we're looking for ${this.currentProblem.targetNumber}.`,
         "incorrect"
       );
-
+      if (!this.settings.quietMode && !this._level0FeedbackSpoken) {
+        this.speak("Try again!", undefined, 1);
+        this._level0FeedbackSpoken = true;
+      }
       setTimeout(() => {
         if (tile) tile.classList.remove("incorrect");
       }, 1000);
     }
-
     this.updateLevel0Display();
     this.gameStorage.saveGameStats(this.stats);
   }
@@ -626,9 +668,6 @@ class AdditionGame {
     const errors = errorsMatrix[selectedRow][selectedCol];
     const successScore = successMatrix[selectedRow][selectedCol];
 
-    console.log(
-      `🎯 Error-aware selection: Row ${selectedRow} (sum: ${rowSums[selectedRow]}) + Col ${selectedCol} (tries: ${tries}, errors: ${errors}, score: ${successScore})`
-    );
 
     return {
       num1: selectedRow,
@@ -780,7 +819,6 @@ class AdditionGame {
 
   // Testing Mode Methods for Scoring Logic Observation
   startAutoTest() {
-    console.log("🧪 Starting auto-test mode with 10% error rate");
     this.autoTestMode = true;
 
     // Show scoring displays during testing
@@ -800,7 +838,6 @@ class AdditionGame {
   }
 
   stopAutoTest() {
-    console.log("🛑 Stopping auto-test mode");
     this.autoTestMode = false;
 
     // Hide scoring displays when not testing
@@ -818,13 +855,11 @@ class AdditionGame {
     displays.forEach((display) => {
       display.classList.remove("hidden");
     });
-    console.log("📊 Scoring displays shown for auto-test mode");
   }
 
   hideScoringDisplays() {
     // Only hide if auto-test is not running
     if (this.autoTestMode) {
-      console.log("🙈 Skipping hide - auto-test is active");
       return;
     }
 
@@ -872,13 +907,9 @@ class AdditionGame {
           ? wrongOptions[Math.floor(Math.random() * wrongOptions.length)]
           : correctAnswer + 1;
 
-      console.log(
-        `🔴 Auto-generated WRONG answer: ${answer} (correct: ${correctAnswer})`
-      );
     } else {
       // Generate correct answer
       answer = this.currentProblem.correctAnswer;
-      console.log(`🟢 Auto-generated CORRECT answer: ${answer}`);
     }
 
     // Fill the input and trigger answer check
@@ -895,12 +926,74 @@ class AdditionGame {
   }
 
   // Utility Methods
-  speak(text) {
+  speak(text, onEndCallback, repeatCountOverride) {
     if (this.speechSynthesis && !this.settings.quietMode) {
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 0.8;
-      utterance.pitch = 1.1;
-      this.speechSynthesis.speak(utterance);
+      const speakWithVoice = (onEndCallback, repeatCountOverride) => {
+        const voices = this.speechSynthesis.getVoices();
+        // Prefer English, female/child, slowest rate
+        let selected = voices.find(
+          (v) =>
+            v.lang.startsWith("en") &&
+            (v.name.toLowerCase().includes("child") ||
+              v.name.toLowerCase().includes("female"))
+        );
+        if (!selected)
+          selected = voices.find(
+            (v) =>
+              v.lang.startsWith("en") && v.name.toLowerCase().includes("girl")
+          );
+        if (!selected) selected = voices.find((v) => v.lang.startsWith("en"));
+        if (!selected) selected = voices[0];
+        // Force US English female voice, fallback to Zira, then any US English
+        let preferred = voices.find(
+          (v) => v.name === "Microsoft Zira - English (United States)"
+        );
+        if (!preferred)
+          preferred = voices.find(
+            (v) => v.lang === "en-US" && v.name.toLowerCase().includes("female")
+          );
+        if (!preferred)
+          preferred = voices.find(
+            (v) => v.lang === "en-US" && v.name.toLowerCase().includes("zira")
+          );
+        if (!preferred)
+          preferred = voices.find(
+            (v) => v.lang === "en-US" && v.name.toLowerCase().includes("woman")
+          );
+        if (!preferred) preferred = voices.find((v) => v.lang === "en-US");
+        if (!preferred) preferred = voices.find((v) => v.lang.startsWith("en"));
+
+        setTimeout(() => {
+          const repeatCount =
+            typeof repeatCountOverride === "number" ? repeatCountOverride : 2;
+          let finishedCount = 0;
+          for (let i = 0; i < repeatCount; i++) {
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.voice = preferred;
+            utterance.rate = 0.45; // Slightly faster for clarity
+            utterance.pitch = 1.1; // Lower pitch for clarity
+            utterance.volume = 1.0;
+            utterance.onstart = () => {};
+            utterance.onend = () => {
+              finishedCount++;
+              if (
+                finishedCount === repeatCount &&
+                typeof onEndCallback === "function"
+              ) {
+                onEndCallback();
+              }
+            };
+            this.speechSynthesis.speak(utterance);
+          }
+        }, 350); // 350ms pause before speaking
+      };
+      // Some browsers need voices to be loaded asynchronously
+      if (this.speechSynthesis.getVoices().length === 0) {
+        window.speechSynthesis.onvoiceschanged = () =>
+          speakWithVoice(onEndCallback, repeatCountOverride);
+      } else {
+        speakWithVoice(onEndCallback, repeatCountOverride);
+      }
     }
   }
 
@@ -936,12 +1029,10 @@ class AdditionGame {
       html.setAttribute("data-theme", theme);
     }
 
-    console.log(`Theme applied: ${theme}`);
   }
 
   checkOnlineStatus() {
     // Placeholder for online/offline status
-    console.log("Online status:", navigator.onLine);
   }
 }
 
