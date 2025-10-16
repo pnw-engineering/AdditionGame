@@ -186,21 +186,30 @@ footer {
 
 .answer-input-container {
   position: relative;
+  font-size: 1.13em; /* 2/3 of 1.7em */
+  min-width: 1.67em; /* 2/3 of 2.5em */
+  min-height: 1.67em; /* 2/3 of 2.5em */
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-#answer-input {
-  font-size: 1em;
-  padding: 0.3em 0.6em;
-  border: 3px solid #3498db;
-  border-radius: 0.5em;
+#level1-answer-input {
+  font-size: 1.13em; /* 2/3 of 1.7em */
+  padding: 0.2em 0.53em; /* 2/3 of 0.3em 0.8em */
+  border: 2px solid #3498db; /* 2/3 of 3px */
+  border-radius: 0.33em; /* 2/3 of 0.5em */
   text-align: center;
-  width: 3em;
+  width: auto;
+  min-width: 1.67em;
+  max-width: 8em;
   font-weight: 700;
   background: white;
   color: #2c3e50;
+  box-sizing: border-box;
 }
 
-#answer-input:focus {
+#level1-answer-input:focus {
   outline: none;
   border-color: #e74c3c;
   box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.2);
@@ -480,9 +489,27 @@ footer {
   padding: 1.2em 0;
 }
 
+.personalize {
+  margin-bottom: 1em;
+  display: grid;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5em;
+}
+
+.user-name-display {
+  font-size: 1em;
+  font-weight: 600;
+  color: #2c3e50;
+  background: hsl(212, 85%, 62%);
+  border: 1px solid #2c3e50;
+  padding: 0.3em 0.6em;
+  border-radius: 0.5em;
+}
+
 .level-selection h2 {
   margin-bottom: 1.2em;
-  color: #2c3e50;
+  /* color: #2c3e50; */
   font-size: 1.4em;
 }
 
@@ -635,7 +662,7 @@ footer {
   display: flex;
   align-items: center;
   gap: 0.5em;
-  background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+  background: linear-gradient(135deg, #ffecd2 0%, #9fe8fc 100%);
   padding: 0.5em 1em;
   border-radius: 1em;
   color: #2c3e50;
@@ -896,6 +923,7 @@ footer {
 [data-theme="dark"] .answer-input {
   background: #2c3e50;
   color: #ecf0f1;
+  /* color: white; */
   border: 2px solid #34495e;
 }
 
@@ -961,4 +989,92 @@ footer {
 [data-theme="light"] .array-content {
   background: #ffffff;
   color: #000000;
+}
+/* Add to the end of your CSS file */
+
+/* Universal focus/active for buttons and tiles */
+.game-btn:focus,
+.game-btn:active,
+.number-tile:focus,
+.number-tile:active {
+  outline: 2px solid #ffd93d;
+  box-shadow: 0 0 0 3px rgba(255, 217, 61, 0.3);
+}
+
+/* Improve contrast for feedback areas */
+[data-theme="dark"] .feedback-area,
+[data-theme="dark"] .feedback {
+  background: #222a36;
+  color: #ffd93d;
+}
+
+[data-theme="light"] .feedback-area,
+[data-theme="light"] .feedback {
+  background: #f7f7fa;
+  color: #333;
+}
+
+/* Make scoring arrays more readable */
+[data-theme="dark"] .array-title {
+  background: #222a36;
+  color: #ffd93d;
+}
+
+[data-theme="light"] .array-title {
+  background: #ffffe0;
+  color: #333;
+}
+
+/* Improve card backgrounds for dark mode */
+[data-theme="dark"] .level-card {
+  background: linear-gradient(135deg, #232946 0%, #2c3e50 100%);
+  /* color: #ffd93d; */
+}
+
+[data-theme="dark"] .level-card.selected {
+  background: linear-gradient(135deg, #ffd93d 0%, #232946 100%);
+  color: #232946;
+}
+
+/* Improve card backgrounds for light mode */
+[data-theme="light"] .level-card {
+  /* background: linear-gradient(135deg, #f7f7fa 0%, #fecfef 100%); */
+  color: #333;
+}
+
+[data-theme="light"] .level-card.selected {
+  background: linear-gradient(135deg, #ffd93d 0%, #f7f7fa 100%);
+  color: #333;
+}
+
+/* Improve number tile backgrounds for dark mode */
+[data-theme="dark"] .number-tile {
+  background: linear-gradient(135deg, #232946 0%, #34495e 100%);
+  color: #ffd93d !important;
+}
+
+[data-theme="dark"] .number-tile.correct {
+  background: linear-gradient(135deg, #27ae60 0%, #56ab2f 100%);
+  color: #fff !important;
+}
+
+[data-theme="dark"] .number-tile.incorrect {
+  background: linear-gradient(135deg, #e74c3c 0%, #ff758c 100%);
+  color: #fff !important;
+}
+
+/* Improve number tile backgrounds for light mode */
+[data-theme="light"] .number-tile {
+  background: linear-gradient(135deg, #e0f7fa 0%, #84fab0 100%);
+  color: #333 !important;
+}
+
+[data-theme="light"] .number-tile.correct {
+  background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
+  color: #fff !important;
+}
+
+[data-theme="light"] .number-tile.incorrect {
+  background: linear-gradient(135deg, #ff758c 0%, #ff7eb3 100%);
+  color: #fff !important;
 }

@@ -1,7 +1,66 @@
 // Addition Game for Elementary Kids - Single Screen Implementation
 class AdditionGame {
+  // Utility: Format matrix for display
+  formatMatrix(matrix) {
+    if (Array.isArray(matrix[0])) {
+      // 2D matrix (Level 1)
+      return matrix.map((row) => row.join(", ")).join(" | ");
+    } else {
+      // 1D array (Level 0)
+      return matrix.join(", ");
+    }
+  }
+
+  // Utility: Record a try for a given level/problem
+  recordTry(level, i, j) {
+    if (level === 0) {
+      this.progressMatrix[0].tries[i]++;
+    } else if (level === 1) {
+      this.progressMatrix[1].tries[i][j]++;
+    }
+  }
+
+  // Utility: Record an error for a given level/problem
+  recordError(level, i, j) {
+    if (level === 0) {
+      this.progressMatrix[0].errors[i]++;
+    } else if (level === 1) {
+      this.progressMatrix[1].errors[i][j]++;
+    }
+  }
+
+  // Utility: Decrement error count (minimum 0)
+  decrementError(level, i, j) {
+    if (level === 0) {
+      this.progressMatrix[0].errors[i] = Math.max(
+        0,
+        this.progressMatrix[0].errors[i] - 1
+      );
+    } else if (level === 1) {
+      this.progressMatrix[1].errors[i][j] = Math.max(
+        0,
+        this.progressMatrix[1].errors[i][j] - 1
+      );
+    }
+  }
+  // Load settings from storage
+  loadSettings() {
+    this.settings = this.gameStorage.getSettings();
+    // Add any additional settings logic here if needed
+  }
+  // Show the requested screen and hide others
+  showScreen(screenId) {
+    // Hide all screens
+    document.querySelectorAll(".screen").forEach((screen) => {
+      screen.classList.add("hidden");
+    });
+    // Show the requested screen
+    const target = document.getElementById(screenId);
+    if (target) target.classList.remove("hidden");
+  }
   // Level 0 prompt repeat timer
   level0PromptTimer = null;
+  level0PracticeMode = true;
   constructor() {
     this.currentProblem = null;
     this.startTime = null;
@@ -47,6 +106,9 @@ class AdditionGame {
       },
     };
 
+    // Personalization: User Name
+    this.userName = localStorage.getItem("userName") || "";
+
     this.init();
   }
 
@@ -57,14 +119,21 @@ class AdditionGame {
     this.checkOnlineStatus();
     this.updateScoringDisplays();
 
-    // Initially hide scoring displays (only show during auto-test)
-    // Use setTimeout to ensure DOM is fully loaded
+    // Personalization: Show name on all screens
+    this.updateUserNameDisplay();
+    // If not entered, prompt for name
+    if (!this.userName) {
+      setTimeout(() => {
+        this.promptForUserName();
+      }, 500);
+    }
+
+    // Hide scoring displays (only show during auto-test)
     setTimeout(() => {
       this.hideScoringDisplays();
     }, 100);
   }
 
-  // Backend Guidelines: Scoring Array Management
   updateScoringDisplays(specificLevel = null) {
     // Update displays for specific level or all levels
     const levelsToUpdate =
@@ -93,164 +162,14 @@ class AdditionGame {
     });
   }
 
-  // Format matrix for clean display - handles both 1D and 2D arrays
-  formatMatrix(matrix) {
-    // Check if it's a 1D array (Level 0) or 2D array (Level 1)
-    const is1D = !Array.isArray(matrix[0]);
-
-    if (is1D) {
-      // Format as single row
-      return matrix.map((value) => value.toString().padStart(2, " ")).join(" ");
-    } else {
-      // Format as multiple rows
-      return matrix
-        .map((row) => {
-          return row
-            .map((value) => value.toString().padStart(2, " "))
-            .join(" ");
-        })
-        .join("\n");
-    }
-  }
-
-  // Backend Guidelines: Record attempt (+1 try regardless of correct/incorrect)
-  recordTry(level, num1, num2 = 0) {
-    if (this.progressMatrix[level]) {
-      if (level == 0) {
-        // Level 0: 1D array, num1 is the number index (0-9)
-        if (num1 < this.progressMatrix[level].tries.length) {
-          this.progressMatrix[level].tries[num1] += 1;
-        }
-      } else {
-        // Level 1+: 2D array, num1 + num2 combinations
-        if (
-          this.progressMatrix[level].tries[num1] &&
-          num2 < this.progressMatrix[level].tries[num1].length
-        ) {
-          this.progressMatrix[level].tries[num1][num2] += 1;
-        }
-      }
-      this.updateScoringDisplays(level);
-    }
-  }
-
-  // Backend Guidelines: Record incorrect answer (+1 error count)
-  recordError(level, num1, num2 = 0) {
-    if (this.progressMatrix[level]) {
-      if (level == 0) {
-        // Level 0: 1D array, num1 is the number index (0-9)
-        if (num1 < this.progressMatrix[level].errors.length) {
-          this.progressMatrix[level].errors[num1] = Math.max(
-            0,
-            this.progressMatrix[level].errors[num1] + 1
-          );
-        }
-      } else {
-        // Level 1+: 2D array, num1 + num2 combinations
-        if (
-          this.progressMatrix[level].errors[num1] &&
-          num2 < this.progressMatrix[level].errors[num1].length
-        ) {
-          this.progressMatrix[level].errors[num1][num2] = Math.max(
-            0,
-            this.progressMatrix[level].errors[num1][num2] + 1
-          );
-        }
-      }
-      this.updateScoringDisplays(level);
-    }
-  }
-
-  // Backend Guidelines: Decrement error count for correct answers (minimum 0)
-  decrementError(level, num1, num2 = 0) {
-    if (this.progressMatrix[level]) {
-      if (level == 0) {
-        // Level 0: 1D array, num1 is the number index (0-9)
-        if (num1 < this.progressMatrix[level].errors.length) {
-          this.progressMatrix[level].errors[num1] = Math.max(
-            0,
-            this.progressMatrix[level].errors[num1] - 1
-          );
-        }
-      } else {
-        // Level 1+: 2D array, num1 + num2 combinations
-        if (
-          this.progressMatrix[level].errors[num1] &&
-          num2 < this.progressMatrix[level].errors[num1].length
-        ) {
-          this.progressMatrix[level].errors[num1][num2] = Math.max(
-            0,
-            this.progressMatrix[level].errors[num1][num2] - 1
-          );
-        }
-      }
-      this.updateScoringDisplays(level);
-    }
-  }
-
-  // Screen Management - Single Use Principle
-  showScreen(screenId) {
-    // Stop auto-test when leaving Level 1
-    if (this.autoTestMode && screenId !== "level1-screen") {
-      this.stopAutoTest();
-      // Reset button visibility
-      const startBtn = document.getElementById("start-auto-test-btn");
-      const stopBtn = document.getElementById("stop-auto-test-btn");
-      if (startBtn) startBtn.classList.remove("hidden");
-      if (stopBtn) stopBtn.classList.add("hidden");
-    }
-
-    // Stop Level 0 prompt and speech when leaving Level 0
-    if (screenId !== "level0-screen") {
-      this.clearLevel0PromptTimer();
-      if (window.speechSynthesis) {
-        window.speechSynthesis.cancel();
-      }
-    }
-
-    // Hide all screens
-    const screens = document.querySelectorAll(".screen");
-    screens.forEach((screen) => {
-      screen.classList.add("hidden");
-    });
-
-    // Show the requested screen
-    const targetScreen = document.getElementById(screenId);
-    if (targetScreen) {
-      targetScreen.classList.remove("hidden");
-    }
-
-    // Update scoring displays when showing game screens
-    if (screenId.includes("level")) {
-      // Extract level number from screenId (e.g., "level0-screen" -> 0)
-      const levelMatch = screenId.match(/level(\d+)/);
-      if (levelMatch) {
-        const currentLevel = parseInt(levelMatch[1]);
-        this.updateScoringDisplays(currentLevel);
-      }
-
-      // Hide scoring displays unless auto-test is running
-      if (!this.autoTestMode) {
-        this.hideScoringDisplays();
-      }
-    }
-  }
-
-  loadSettings() {
-    // Load settings into settings screen
-    const quietMode = document.getElementById("quiet-mode");
-    const difficulty = document.getElementById("difficulty-level");
-    const themeSelect = document.getElementById("theme-select");
-
-    if (quietMode) quietMode.checked = this.settings.quietMode || false;
-    if (difficulty) difficulty.value = this.settings.difficulty || "easy";
-    if (themeSelect) themeSelect.value = this.settings.theme || "auto";
-
-    // Apply the current theme
-    this.applyTheme(this.settings.theme || "auto");
-  }
-
   setupEventListeners() {
+    // Personalization: Clear Name button
+    const clearNameBtn = document.getElementById("clear-user-name-btn");
+    if (clearNameBtn) {
+      clearNameBtn.addEventListener("click", () => {
+        this.clearUserName();
+      });
+    }
     // Welcome Screen - Level Selection
     document.querySelectorAll(".level-card").forEach((card) => {
       card.addEventListener("click", (e) => {
@@ -314,7 +233,11 @@ class AdditionGame {
       .forEach((tile) => {
         tile.addEventListener("click", (e) => {
           const number = parseInt(e.currentTarget.dataset.number);
-          this.checkLevel0Answer(number);
+          if (this.level0PracticeMode) {
+            this.handleLevel0Practice(number);
+          } else {
+            this.checkLevel0Answer(number);
+          }
         });
       });
 
@@ -358,6 +281,14 @@ class AdditionGame {
       });
     }
 
+    // Level 1 Speech Recognition Button
+    const level1SpeechBtn = document.getElementById("level1-speech-btn");
+    if (level1SpeechBtn) {
+      level1SpeechBtn.addEventListener("click", () => {
+        this.listenForLevel1Answer();
+      });
+    }
+
     // Auto-test controls
     const startAutoTestBtn = document.getElementById("start-auto-test-btn");
     if (startAutoTestBtn) {
@@ -393,7 +324,7 @@ class AdditionGame {
       });
     }
 
-    // Level 0 - Reset Button
+    // Level 1 - Reset Button
     const level1ResetBtn = document.getElementById("level1-reset-btn");
     if (level1ResetBtn) {
       level1ResetBtn.addEventListener("click", () => {
@@ -406,7 +337,60 @@ class AdditionGame {
         this.gameStorage.saveGameStats(this.stats);
       });
     }
+
+    // Level 0 Practice/Test Toggle
+    const level0ModeBtn = document.getElementById("level0-mode-btn");
+    if (level0ModeBtn) {
+      level0ModeBtn.addEventListener("click", () => {
+        this.setLevel0Mode(!this.level0PracticeMode);
+      });
+    }
   }
+
+  // Level 1: Listen for spoken answer and fill input
+  listenForLevel1Answer() {
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert("Speech recognition not supported in this browser.");
+      return;
+    }
+    const recognition = new SpeechRecognition();
+    recognition.lang = "en-US";
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onresult = (event) => {
+      let spoken = event.results[0][0].transcript.trim();
+      // Extract first number from spoken string
+      const match = spoken.match(/\d+/);
+      if (match) {
+        const answer = match[0];
+        const input = document.getElementById("level1-answer-input");
+        if (input) {
+          input.value = answer;
+          input.focus();
+        }
+        this.checkLevel1Answer();
+      } else {
+        this.showLevel1Feedback(
+          "Sorry, I didn't hear a number. Please try again.",
+          "incorrect"
+        );
+      }
+    };
+    recognition.onerror = () => {
+      this.showLevel1Feedback(
+        "Speech recognition error. Please try again.",
+        "incorrect"
+      );
+    };
+    recognition.start();
+    this.showLevel1Feedback("Listening... Please say your answer.", "hint");
+  }
+
+  // ...existing code...
+  // }
 
   startLevel(level) {
     this.currentGameLevel = level;
@@ -427,9 +411,45 @@ class AdditionGame {
     this.resetLevel0Stats();
     this.updateLevel0Display();
     this.clearLevel0PromptTimer();
-    this.generateAndPromptLevel0Number();
+    this.setLevel0Mode(true); // Start in practice mode
+  }
+  setLevel0Mode(practice) {
+    this.level0PracticeMode = practice;
+    // Cancel any ongoing speech immediately when toggling mode
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+    const btn = document.getElementById("level0-mode-btn");
+    const instruction = document.getElementById("level0-instruction");
+    if (btn) {
+      btn.textContent = practice
+        ? "Switch to Test Mode"
+        : "Switch to Practice Mode";
+    }
+    if (practice) {
+      // Practice mode: prompt and wait for touch
+      if (instruction)
+        instruction.textContent =
+          "Touch a number and I will tell you what it is.";
+      this.clearLevel0PromptTimer();
+      if (!this.settings.quietMode) {
+        this.speak("Touch a number and I will tell you what it is.");
+      }
+    } else {
+      // Test mode: start normal prompt loop
+      this.generateAndPromptLevel0Number();
+    }
   }
 
+  handleLevel0Practice(number) {
+    // Announce the number touched only once
+    const instruction = document.getElementById("level0-instruction");
+    if (instruction)
+      instruction.textContent = `That is the number ${number}. Touch another number!`;
+    if (!this.settings.quietMode) {
+      // Cancel any ongoing speech before speaking the new number
+      if (window.speechSynthesis) window.speechSynthesis.cancel();
+      this.speak(`That is the number ${number}. Touch another number!`);
+    }
+  }
   playLevel0Number() {
     this.generateAndPromptLevel0Number();
   }
@@ -949,6 +969,86 @@ class AdditionGame {
   }
 
   // Utility Methods
+  // Personalization: Update name display everywhere
+  updateUserNameDisplay() {
+    // Always use the latest userName, fallback to localStorage if needed
+    let name = this.userName;
+    if (!name) {
+      name = localStorage.getItem("userName") || "";
+    }
+    const displayName = name && name.length > 0 ? name : "Not Entered";
+    const nameDisplay = document.getElementById("user-name-display");
+    if (nameDisplay) nameDisplay.textContent = displayName;
+    const level0Name = document.getElementById("level0-user-name");
+    if (level0Name) level0Name.textContent = displayName;
+    const level1Name = document.getElementById("level1-user-name");
+    if (level1Name) level1Name.textContent = displayName;
+  }
+
+  // Personalization: Prompt for name with TTS and speech recognition
+  promptForUserName() {
+    this.speak(
+      "Hi, I'm going to play some number games with you. What's your name?",
+      () => {
+        this.listenForUserName();
+      },
+      1
+    );
+  }
+
+  listenForUserName() {
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert("Speech recognition not supported in this browser.");
+      return;
+    }
+    const recognition = new SpeechRecognition();
+    recognition.lang = "en-US";
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onresult = (event) => {
+      let spoken = event.results[0][0].transcript.trim();
+      // Remove any leading greeting if present (e.g., "I'm going to play ...")
+      // Only keep the first word if the phrase is long and not a likely name
+      if (spoken.toLowerCase().startsWith("i'm going to play")) {
+        spoken = spoken.replace(/^i'm going to play/i, "").trim();
+      }
+      // If the phrase is more than 2 words, just use the first word
+      const words = spoken.split(" ");
+      if (words.length > 2) {
+        spoken = words[0];
+      }
+      this.userName = spoken.charAt(0).toUpperCase() + spoken.slice(1);
+      localStorage.setItem("userName", this.userName);
+      this.updateUserNameDisplay();
+      this.speak(
+        `Hi ${this.userName}, let's get started. First pick the level.`,
+        undefined,
+        1
+      );
+    };
+    recognition.onerror = () => {
+      this.speak(
+        "Sorry, I didn't catch that. Please say your name again.",
+        () => {
+          setTimeout(() => {
+            this.listenForUserName();
+          }, 5000);
+        },
+        1
+      );
+    };
+    recognition.start();
+  }
+
+  clearUserName() {
+    this.userName = "";
+    localStorage.removeItem("userName");
+    this.updateUserNameDisplay();
+    this.promptForUserName();
+  }
   speak(text, onEndCallback, repeatCountOverride) {
     if (this.speechSynthesis && !this.settings.quietMode) {
       const speakWithVoice = (onEndCallback, repeatCountOverride) => {
@@ -1056,7 +1156,19 @@ class AdditionGame {
   checkOnlineStatus() {
     // Placeholder for online/offline status
   }
-}
 
+  initUserName() {
+    // Load from storage
+    this.userName = localStorage.getItem("userName") || "";
+    this.updateUserNameDisplay();
+
+    // If not entered, prompt for name
+    if (!this.userName) {
+      this.promptForUserName();
+    }
+  }
+
+  // ...existing code...
+}
 // Make AdditionGame globally available
 window.AdditionGame = AdditionGame;

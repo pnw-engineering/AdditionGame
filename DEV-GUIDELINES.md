@@ -124,6 +124,16 @@ frontend/
   - Clamps with viewport units make sizing unpredictable and hard to maintain
   - Exception: `clamp()` with `rem` units for font-size is acceptable
 
+### Welcome screen
+
+#### personalization
+
+- The users name should be shown. If not previously entered show "Not Entered".
+- If user name has not been entered, use tts to say: "Hi, I'm going to play some number games with you. What's your name?". Listen for the response and save the name. Repeat the name saying: "Hi {name} let's get started. First pick the level.".
+- The name should be persistant.
+- Disply the name on level 0 and level 1 screens.
+- Provide a button to clear the name and ask for the name again.
+
 ## 🐍 Backend Guidelines
 
 ### Architecture
