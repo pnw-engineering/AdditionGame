@@ -1,5 +1,22 @@
 // Addition Game for Elementary Kids - Single Screen Implementation
 class AdditionGame {
+  // Level 0: Generate and prompt a random number for test mode
+  generateAndPromptLevel0Number() {
+    // Pick a random number 0-9
+    const targetNumber = Math.floor(Math.random() * 10);
+    this.currentProblem = { targetNumber };
+    const instruction = document.getElementById("level0-instruction");
+    if (instruction) {
+      instruction.textContent = `Find the number ${targetNumber}!`;
+    }
+    if (!this.settings.quietMode) {
+      this.speak(`Find the number ${targetNumber}!`);
+    }
+    // Reset feedback and tile highlights
+    this.clearLevel0Feedback();
+    this.resetLevel0Tiles();
+    this._level0FeedbackSpoken = false;
+  }
   handleLevel0Practice(number) {
     // Announce the number touched only once
     const instruction = document.getElementById("level0-instruction");
@@ -19,8 +36,8 @@ class AdditionGame {
     const instruction = document.getElementById("level0-instruction");
     if (btn) {
       btn.textContent = practice
-        ? "Switch to Test Mode"
-        : "Switch to Practice Mode";
+        ? "Mode: Practice (Switch to Test Mode)"
+        : "Mode: Test (Switch to Practice Mode)";
     }
     if (practice) {
       // Practice mode: prompt and wait for touch
@@ -41,7 +58,10 @@ class AdditionGame {
     this.resetLevel0Stats();
     this.updateLevel0Display();
     this.clearLevel0PromptTimer();
-    this.setLevel0Mode(true); // Start in practice mode
+    // Always update button to show current mode
+    this.setLevel0Mode(
+      this.level0PracticeMode === undefined ? true : this.level0PracticeMode
+    );
   }
   // Utility: Format matrix for display
   formatMatrix(matrix) {
@@ -93,6 +113,8 @@ class AdditionGame {
   }
   // Show the requested screen and hide others
   showScreen(screenId) {
+    // Cancel any ongoing speech immediately when changing screens
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
     // Hide all screens
     document.querySelectorAll(".screen").forEach((screen) => {
       screen.classList.add("hidden");
@@ -206,6 +228,12 @@ class AdditionGame {
   }
 
   setupEventListeners() {
+    // Cancel speech on any button press
+    document.querySelectorAll("button").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        if (window.speechSynthesis) window.speechSynthesis.cancel();
+      });
+    });
     // Personalization: Clear Name button
     const clearNameBtn = document.getElementById("clear-user-name-btn");
     if (clearNameBtn) {
@@ -253,6 +281,7 @@ class AdditionGame {
     const level0BackBtn = document.getElementById("level0-back-btn");
     if (level0BackBtn) {
       level0BackBtn.addEventListener("click", () => {
+        if (window.speechSynthesis) window.speechSynthesis.cancel();
         this.showScreen("welcome-screen");
       });
     }

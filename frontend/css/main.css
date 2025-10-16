@@ -60,6 +60,11 @@ main {
   text-align: center;
 }
 
+/* Moved from inline style in index.html for DEV-GUIDELINES compliance */
+#level1-speech-btn {
+  margin-left: 0.5em;
+}
+
 .screen.hidden {
   display: none;
 }
