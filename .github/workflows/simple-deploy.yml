@@ -23,8 +23,8 @@ jobs:
           cp index.html _site/index.html
           cp -r frontend/css _site/
           cp -r frontend/js _site/
-          cp -r frontend/images _site/
-          cp -r frontend/icons _site/
+          cp -r frontend/images _site/ || true
+          cp -r frontend/icons _site/ || true
           cp frontend/manifest.json _site/
           cp frontend/sw.js.disabled _site/
           # Add any other needed assets here
