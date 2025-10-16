@@ -1,5 +1,48 @@
 // Addition Game for Elementary Kids - Single Screen Implementation
 class AdditionGame {
+  handleLevel0Practice(number) {
+    // Announce the number touched only once
+    const instruction = document.getElementById("level0-instruction");
+    if (instruction)
+      instruction.textContent = `That is the number ${number}. Touch another number!`;
+    if (!this.settings.quietMode) {
+      // Cancel any ongoing speech before speaking the new number
+      if (window.speechSynthesis) window.speechSynthesis.cancel();
+      this.speak(`That is the number ${number}. Touch another number!`);
+    }
+  }
+  setLevel0Mode(practice) {
+    this.level0PracticeMode = practice;
+    // Cancel any ongoing speech immediately when toggling mode
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+    const btn = document.getElementById("level0-mode-btn");
+    const instruction = document.getElementById("level0-instruction");
+    if (btn) {
+      btn.textContent = practice
+        ? "Switch to Test Mode"
+        : "Switch to Practice Mode";
+    }
+    if (practice) {
+      // Practice mode: prompt and wait for touch
+      if (instruction)
+        instruction.textContent =
+          "Touch a number and I will tell you what it is.";
+      this.clearLevel0PromptTimer();
+      if (!this.settings.quietMode) {
+        this.speak("Touch a number and I will tell you what it is.");
+      }
+    } else {
+      // Test mode: start normal prompt loop
+      this.generateAndPromptLevel0Number();
+    }
+  }
+  // Level 0 - Number Recognition Methods
+  initLevel0() {
+    this.resetLevel0Stats();
+    this.updateLevel0Display();
+    this.clearLevel0PromptTimer();
+    this.setLevel0Mode(true); // Start in practice mode
+  }
   // Utility: Format matrix for display
   formatMatrix(matrix) {
     if (Array.isArray(matrix[0])) {
@@ -360,12 +403,47 @@ class AdditionGame {
     recognition.interimResults = false;
     recognition.maxAlternatives = 1;
 
+    console.log("[Level 1] Speech recognition started");
+
     recognition.onresult = (event) => {
-      let spoken = event.results[0][0].transcript.trim();
+      console.log("[Level 1] Speech recognition result:", event);
+      let spoken = event.results[0][0].transcript.trim().toLowerCase();
       // Extract first number from spoken string
-      const match = spoken.match(/\d+/);
-      if (match) {
-        const answer = match[0];
+      let answer = null;
+      const digitMatch = spoken.match(/\d+/);
+      if (digitMatch) {
+        answer = digitMatch[0];
+      } else {
+        // Try to convert number words to digits
+        const numberWords = {
+          zero: 0,
+          one: 1,
+          two: 2,
+          three: 3,
+          four: 4,
+          five: 5,
+          six: 6,
+          seven: 7,
+          eight: 8,
+          nine: 9,
+          ten: 10,
+          eleven: 11,
+          twelve: 12,
+          thirteen: 13,
+          fourteen: 14,
+          fifteen: 15,
+          sixteen: 16,
+          seventeen: 17,
+          eighteen: 18,
+        };
+        for (const [word, num] of Object.entries(numberWords)) {
+          if (spoken.includes(word)) {
+            answer = num;
+            break;
+          }
+        }
+      }
+      if (answer !== null) {
         const input = document.getElementById("level1-answer-input");
         if (input) {
           input.value = answer;
@@ -379,11 +457,24 @@ class AdditionGame {
         );
       }
     };
-    recognition.onerror = () => {
+    recognition.onerror = (err) => {
+      console.log("[Level 1] Speech recognition error:", err);
       this.showLevel1Feedback(
         "Speech recognition error. Please try again.",
         "incorrect"
       );
+    };
+    recognition.onend = () => {
+      console.log("[Level 1] Speech recognition ended");
+    };
+    recognition.onaudiostart = () => {
+      console.log("[Level 1] Speech recognition audio started");
+    };
+    recognition.onspeechstart = () => {
+      console.log("[Level 1] Speech recognition speech started");
+    };
+    recognition.onspeechend = () => {
+      console.log("[Level 1] Speech recognition speech ended");
     };
     recognition.start();
     this.showLevel1Feedback("Listening... Please say your answer.", "hint");
@@ -403,101 +494,6 @@ class AdditionGame {
     } else if (level === 1) {
       this.showScreen("level1-screen");
       this.initLevel1();
-    }
-  }
-
-  // Level 0 - Number Recognition Methods
-  initLevel0() {
-    this.resetLevel0Stats();
-    this.updateLevel0Display();
-    this.clearLevel0PromptTimer();
-    this.setLevel0Mode(true); // Start in practice mode
-  }
-  setLevel0Mode(practice) {
-    this.level0PracticeMode = practice;
-    // Cancel any ongoing speech immediately when toggling mode
-    if (window.speechSynthesis) window.speechSynthesis.cancel();
-    const btn = document.getElementById("level0-mode-btn");
-    const instruction = document.getElementById("level0-instruction");
-    if (btn) {
-      btn.textContent = practice
-        ? "Switch to Test Mode"
-        : "Switch to Practice Mode";
-    }
-    if (practice) {
-      // Practice mode: prompt and wait for touch
-      if (instruction)
-        instruction.textContent =
-          "Touch a number and I will tell you what it is.";
-      this.clearLevel0PromptTimer();
-      if (!this.settings.quietMode) {
-        this.speak("Touch a number and I will tell you what it is.");
-      }
-    } else {
-      // Test mode: start normal prompt loop
-      this.generateAndPromptLevel0Number();
-    }
-  }
-
-  handleLevel0Practice(number) {
-    // Announce the number touched only once
-    const instruction = document.getElementById("level0-instruction");
-    if (instruction)
-      instruction.textContent = `That is the number ${number}. Touch another number!`;
-    if (!this.settings.quietMode) {
-      // Cancel any ongoing speech before speaking the new number
-      if (window.speechSynthesis) window.speechSynthesis.cancel();
-      this.speak(`That is the number ${number}. Touch another number!`);
-    }
-  }
-  playLevel0Number() {
-    this.generateAndPromptLevel0Number();
-  }
-
-  // Generate a new number and start the prompt loop
-  generateAndPromptLevel0Number() {
-    this.currentProblem = {
-      targetNumber: Math.floor(Math.random() * 10),
-      startTime: Date.now(),
-    };
-    this._level0FeedbackSpoken = false;
-    this.clearLevel0Feedback();
-    this.resetLevel0Tiles();
-    this.level0PromptLoop();
-  }
-
-  // Speak prompt and repeat every 5s until correct tile is touched
-  level0PromptLoop() {
-    // Only run prompt loop if Level 0 screen is active
-    const level0Screen = document.getElementById("level0-screen");
-    if (!level0Screen || level0Screen.classList.contains("hidden")) {
-      this.clearLevel0PromptTimer();
-      if (window.speechSynthesis) {
-        window.speechSynthesis.cancel();
-      }
-      return;
-    }
-    const instruction = document.getElementById("level0-instruction");
-    if (instruction) {
-      instruction.textContent = `Can you touch the number ${this.currentProblem.targetNumber}?`;
-    }
-    this.clearLevel0PromptTimer();
-    if (!this.settings.quietMode) {
-      this.speak(
-        `Can you touch the number ${this.currentProblem.targetNumber}?`,
-        () => {
-          if (!level0Screen.classList.contains("hidden")) {
-            this.level0PromptTimer = setTimeout(() => {
-              this.level0PromptLoop();
-            }, 5000);
-          }
-        },
-        1 // Only speak once per cycle for Level 0
-      );
-    } else {
-      this.level0PromptTimer = setTimeout(() => {
-        this.level0PromptLoop();
-      }, 5000);
     }
   }
 
@@ -1093,7 +1089,7 @@ class AdditionGame {
           for (let i = 0; i < repeatCount; i++) {
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.voice = preferred;
-            utterance.rate = 0.45; // Slightly faster for clarity
+            utterance.rate = 0.75; // Slightly faster for clarity
             utterance.pitch = 1.1; // Lower pitch for clarity
             utterance.volume = 1.0;
             utterance.onstart = () => {};
