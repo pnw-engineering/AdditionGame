@@ -15,6 +15,16 @@
   </head>
   <body>
     <div id="app">
+      <!-- Interaction prompt overlay -->
+      <div id="interaction-prompt">
+        <div class="interaction-content">
+          <h2>🎮 Click to Start!</h2>
+          <p id="interaction-message">
+            Click anywhere to begin the Addition Game
+          </p>
+        </div>
+      </div>
+
       <header>
         <h1>Addition Game - Have FUN!</h1>
       </header>
@@ -28,6 +38,7 @@
               <span class="user-name-display" id="user-name-display"
                 >Not Entered</span
               >
+              <!-- <button id="speak-name-btn" type="button">🎤 Speak Name</button> -->
               <button id="clear-user-name-btn" type="button">Clear Name</button>
             </div>
             <div class="level-grid">
@@ -119,7 +130,6 @@
                 id="level0-mode-btn"
                 class="game-btn secondary small"
                 type="button"
-                style="margin-top: 8px"
               >
                 Mode: Practice (Switch to Test Mode)
               </button>
@@ -294,9 +304,9 @@
         <p>🌟 Keep practicing and have fun! 🌟</p>
       </footer>
     </div>
-    <script src="js/simple-storage.js?v=20251014-001"></script>
-    <script src="js/api.js?v=20251014-001"></script>
-    <script src="js/main.js?v=20251014-010"></script>
-    <script src="js/init.js?v=20251014-001"></script>
+    <script src="js/simple-storage.js" defer></script>
+    <script src="js/api.js" defer></script>
+    <script src="js/main.js" defer></script>
+    <script src="js/init.js" defer></script>
   </body>
 </html>

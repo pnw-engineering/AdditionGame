@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mode Button Test</title>
+  </head>
+  <body>
+    <h1>Mode Button Test</h1>
+    <button id="level0-mode-btn">Mode: Practice (Switch to Test Mode)</button>
+    <div id="test-results"></div>
+
+    <script>
+      // Test script to verify mode button functionality
+      console.log("Testing mode button functionality...");
+
+      // Simulate the game object
+      const mockGame = {
+        level0PracticeMode: true,
+        setLevel0Mode: function (practice) {
+          console.log("setLevel0Mode called with practice:", practice);
+          this.level0PracticeMode = practice;
+          const btn = document.getElementById("level0-mode-btn");
+          if (btn) {
+            btn.textContent = practice
+              ? "Mode: Practice (Switch to Test Mode)"
+              : "Mode: Test (Switch to Practice Mode)";
+            console.log("Button text set to:", btn.textContent);
+          }
+          return practice;
+        },
+      };
+
+      // Make it globally available like in the real app
+      window.additionGame = mockGame;
+
+      // Test the button click handler from init.js
+      function testModeButton() {
+        const results = document.getElementById("test-results");
+        const level0ModeBtn = document.getElementById("level0-mode-btn");
+        if (level0ModeBtn) {
+          results.innerHTML +=
+            "<p>Initial mode: " + mockGame.level0PracticeMode + "</p>";
+          results.innerHTML +=
+            "<p>Initial button text: " + level0ModeBtn.textContent + "</p>";
+
+          // Set up the onclick handler like in init.js
+          level0ModeBtn.onclick = () => {
+            if (
+              window.additionGame &&
+              typeof window.additionGame.level0PracticeMode !== "undefined"
+            ) {
+              console.log(
+                "Mode button clicked, current mode:",
+                window.additionGame.level0PracticeMode
+              );
+              window.additionGame.setLevel0Mode(
+                !window.additionGame.level0PracticeMode
+              );
+              results.innerHTML +=
+                "<p>✅ Click detected! Mode toggled to: " +
+                window.additionGame.level0PracticeMode +
+                "</p>";
+              results.innerHTML +=
+                "<p>Button text: " + level0ModeBtn.textContent + "</p>";
+            }
+          };
+
+          results.innerHTML +=
+            "<p>✅ Mode button handler attached successfully!</p>";
+          results.innerHTML +=
+            "<p>👆 Click the button above to test toggling between Practice and Test modes.</p>";
+        } else {
+          results.innerHTML += "<p>❌ Mode button not found!</p>";
+        }
+      }
+
+      // Run test when DOM is ready
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", testModeButton);
+      } else {
+        testModeButton();
+      }
+    </script>
+  </body>
+</html>

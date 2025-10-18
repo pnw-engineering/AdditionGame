@@ -231,6 +231,17 @@ class AdditionGameStorage {
     return { ...defaults, ...saved };
   }
 
+  // Player name persistence
+  getPlayerName() {
+    return this.storage.retrieve(this.keys.playerName) || "";
+  }
+  setPlayerName(name) {
+    return this.storage.store(this.keys.playerName, name);
+  }
+  clearPlayerName() {
+    return this.storage.remove(this.keys.playerName);
+  }
+
   // Achievement system
   checkAchievements(stats) {
     const achievements = this.getAchievements();

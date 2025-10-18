@@ -29,15 +29,19 @@ class AdditionGame {
     }
   }
   setLevel0Mode(practice) {
+    console.log("setLevel0Mode called with practice:", practice);
     this.level0PracticeMode = practice;
     // Cancel any ongoing speech immediately when toggling mode
     if (window.speechSynthesis) window.speechSynthesis.cancel();
     const btn = document.getElementById("level0-mode-btn");
     const instruction = document.getElementById("level0-instruction");
+    console.log("Button element:", btn);
+    console.log("Instruction element:", instruction);
     if (btn) {
       btn.textContent = practice
         ? "Mode: Practice (Switch to Test Mode)"
         : "Mode: Test (Switch to Practice Mode)";
+      console.log("Button text set to:", btn.textContent);
     }
     if (practice) {
       // Practice mode: prompt and wait for touch
@@ -130,7 +134,14 @@ class AdditionGame {
     this.currentProblem = null;
     this.startTime = null;
     this.gameStorage = window.AdditionGameStorage;
-    this.settings = this.gameStorage.getSettings();
+    const defaultSettings = {
+      soundEnabled: true,
+      quietMode: false,
+      theme: "auto",
+      difficulty: "normal",
+      gameLevel: 0,
+    };
+    this.settings = { ...defaultSettings, ...this.gameStorage.getSettings() };
     this.stats = this.gameStorage.getGameStats();
     this.currentGameLevel = this.settings.gameLevel || 0;
     this.speechSynthesis = window.speechSynthesis;
@@ -180,18 +191,13 @@ class AdditionGame {
   init() {
     this.showScreen("welcome-screen");
     this.setupEventListeners();
-    this.loadSettings();
+    // this.loadSettings(); // Already done in constructor
     this.checkOnlineStatus();
     this.updateScoringDisplays();
 
     // Personalization: Show name on all screens
     this.updateUserNameDisplay();
-    // If not entered, prompt for name
-    if (!this.userName) {
-      setTimeout(() => {
-        this.promptForUserName();
-      }, 500);
-    }
+    // Name prompting now happens after user interaction in init.js
 
     // Hide scoring displays (only show during auto-test)
     setTimeout(() => {
@@ -411,12 +417,16 @@ class AdditionGame {
     }
 
     // Level 0 Practice/Test Toggle
-    const level0ModeBtn = document.getElementById("level0-mode-btn");
-    if (level0ModeBtn) {
-      level0ModeBtn.addEventListener("click", () => {
-        this.setLevel0Mode(!this.level0PracticeMode);
-      });
-    }
+    // const level0ModeBtn = document.getElementById("level0-mode-btn");
+    // if (level0ModeBtn) {
+    //   level0ModeBtn.addEventListener("click", () => {
+    //     console.log(
+    //       "Mode button clicked, current mode:",
+    //       this.level0PracticeMode
+    //     );
+    //     this.setLevel0Mode(!this.level0PracticeMode);
+    //   });
+    // }
   }
 
   // Level 1: Listen for spoken answer and fill input
@@ -1075,73 +1085,63 @@ class AdditionGame {
     this.promptForUserName();
   }
   speak(text, onEndCallback, repeatCountOverride) {
+    console.log("speak called with text:", text);
     if (this.speechSynthesis && !this.settings.quietMode) {
-      const speakWithVoice = (onEndCallback, repeatCountOverride) => {
-        const voices = this.speechSynthesis.getVoices();
-        // Prefer English, female/child, slowest rate
-        let selected = voices.find(
-          (v) =>
-            v.lang.startsWith("en") &&
-            (v.name.toLowerCase().includes("child") ||
-              v.name.toLowerCase().includes("female"))
-        );
-        if (!selected)
-          selected = voices.find(
-            (v) =>
-              v.lang.startsWith("en") && v.name.toLowerCase().includes("girl")
-          );
-        if (!selected) selected = voices.find((v) => v.lang.startsWith("en"));
-        if (!selected) selected = voices[0];
-        // Force US English female voice, fallback to Zira, then any US English
-        let preferred = voices.find(
-          (v) => v.name === "Microsoft Zira - English (United States)"
-        );
-        if (!preferred)
-          preferred = voices.find(
-            (v) => v.lang === "en-US" && v.name.toLowerCase().includes("female")
-          );
-        if (!preferred)
-          preferred = voices.find(
-            (v) => v.lang === "en-US" && v.name.toLowerCase().includes("zira")
-          );
-        if (!preferred)
-          preferred = voices.find(
-            (v) => v.lang === "en-US" && v.name.toLowerCase().includes("woman")
-          );
-        if (!preferred) preferred = voices.find((v) => v.lang === "en-US");
-        if (!preferred) preferred = voices.find((v) => v.lang.startsWith("en"));
+      // Simple single utterance
+      const utterance = new SpeechSynthesisUtterance(text);
 
-        setTimeout(() => {
-          const repeatCount =
-            typeof repeatCountOverride === "number" ? repeatCountOverride : 2;
-          let finishedCount = 0;
-          for (let i = 0; i < repeatCount; i++) {
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.voice = preferred;
-            utterance.rate = 0.75; // Slightly faster for clarity
-            utterance.pitch = 1.1; // Lower pitch for clarity
-            utterance.volume = 1.0;
-            utterance.onstart = () => {};
-            utterance.onend = () => {
-              finishedCount++;
-              if (
-                finishedCount === repeatCount &&
-                typeof onEndCallback === "function"
-              ) {
-                onEndCallback();
-              }
-            };
-            this.speechSynthesis.speak(utterance);
-          }
-        }, 350); // 350ms pause before speaking
-      };
-      // Some browsers need voices to be loaded asynchronously
-      if (this.speechSynthesis.getVoices().length === 0) {
-        window.speechSynthesis.onvoiceschanged = () =>
-          speakWithVoice(onEndCallback, repeatCountOverride);
-      } else {
-        speakWithVoice(onEndCallback, repeatCountOverride);
+      // Voice selection: Prefer American female voice
+      const voices = this.speechSynthesis.getVoices();
+      let preferred = null;
+
+      // First, try to find a female American voice
+      preferred = voices.find(
+        (v) =>
+          v.lang === "en-US" &&
+          (v.name.toLowerCase().includes("female") ||
+            v.name.toLowerCase().includes("zira") ||
+            v.name.toLowerCase().includes("susan") ||
+            v.name.toLowerCase().includes("samantha") ||
+            v.name.toLowerCase().includes("victoria"))
+      );
+
+      // If no female voice found, try any American voice
+      if (!preferred) {
+        preferred = voices.find((v) => v.lang === "en-US");
       }
+
+      // Fallback to any English voice
+      if (!preferred) {
+        preferred = voices.find((v) => v.lang.startsWith("en"));
+      }
+
+      // Final fallback to first available voice
+      if (!preferred) {
+        preferred = voices[0];
+      }
+
+      utterance.voice = preferred;
+      utterance.rate = 0.75; // 75% speed as requested
+      utterance.pitch = 1.0;
+      utterance.volume = 1.0;
+
+      utterance.onstart = () => {
+        console.log("Speech started");
+      };
+      utterance.onend = () => {
+        console.log("Speech ended");
+        if (typeof onEndCallback === "function") {
+          onEndCallback();
+        }
+      };
+      utterance.onerror = (event) => {
+        console.log("Speech error:", event.error);
+      };
+
+      console.log("Speaking with voice:", preferred ? preferred.name : "none");
+      this.speechSynthesis.speak(utterance);
+    } else {
+      console.log("Speech synthesis not available or quiet mode enabled");
     }
   }
 
@@ -1194,6 +1194,75 @@ class AdditionGame {
   }
 
   // ...existing code...
+
+  // Start Level 0 game (Number Recognition) in practice mode
+  // startPracticeMode() {
+  //   const welcome = document.getElementById("welcome-screen");
+  //   const level0 = document.getElementById("level0-screen");
+  //   if (welcome) welcome.classList.add("hidden");
+  //   if (level0) level0.classList.remove("hidden");
+  //   this.setLevel0Mode(true); // Start in practice mode
+  // }
+
+  // Start Level 1 game (Addition)
+  startGame() {
+    const welcome = document.getElementById("welcome-screen");
+    const level1 = document.getElementById("level1-screen");
+    if (welcome) welcome.classList.add("hidden");
+    if (level1) level1.classList.remove("hidden");
+    // Add Level 1 initialization if needed
+  }
+
+  // Go back to welcome screen from Level 0
+  goToWelcomeFromLevel0() {
+    const welcome = document.getElementById("welcome-screen");
+    const level0 = document.getElementById("level0-screen");
+    if (level0) level0.classList.add("hidden");
+    if (welcome) welcome.classList.remove("hidden");
+  }
+
+  // Go back to welcome screen from Level 1
+  goToWelcomeFromLevel1() {
+    const welcome = document.getElementById("welcome-screen");
+    const level1 = document.getElementById("level1-screen");
+    if (level1) level1.classList.add("hidden");
+    if (welcome) welcome.classList.remove("hidden");
+  }
+
+  // Start speech recognition for player name
+  // REMOVED: startNameRecognition functionality
+  /*
+  startNameRecognition() {
+    if ("webkitSpeechRecognition" in window || "SpeechRecognition" in window) {
+      const SpeechRecognition =
+        window.SpeechRecognition || window.webkitSpeechRecognition;
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.lang = "en-US";
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript.trim();
+        this.userName = transcript;
+        if (
+          window.AdditionGameStorage &&
+          window.AdditionGameStorage.setPlayerName
+        ) {
+          window.AdditionGameStorage.setPlayerName(transcript);
+        }
+        this.updateUserNameDisplay();
+        if (this.settings.soundEnabled) {
+          this.speak(`Hello, ${transcript}!`);
+        }
+      };
+      recognition.onerror = (event) => {
+        console.error("Speech recognition error:", event.error);
+      };
+      recognition.start();
+    } else {
+      console.warn("Speech recognition not supported");
+    }
+  }
+  */
 }
 // Make AdditionGame globally available
 window.AdditionGame = AdditionGame;
